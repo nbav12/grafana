@@ -28,7 +28,6 @@ import (
 type DTOConnector struct {
 	getter        rest.Getter
 	legacy        legacy.DashboardAccess
-	unified       resource.ResourceClient
 	largeObjects  apistore.LargeObjectSupport
 	accessControl accesscontrol.AccessControl
 	scheme        *runtime.Scheme
@@ -40,7 +39,6 @@ func NewDTOConnector(
 	dash rest.Storage,
 	largeObjects apistore.LargeObjectSupport,
 	legacyAccess legacy.DashboardAccess,
-	resourceClient resource.ResourceClient,
 	accessControl accesscontrol.AccessControl,
 	scheme *runtime.Scheme,
 	newFunc func() runtime.Object,
@@ -49,7 +47,6 @@ func NewDTOConnector(
 	v := &DTOConnector{
 		legacy:        legacyAccess,
 		accessControl: accessControl,
-		unified:       resourceClient,
 		largeObjects:  largeObjects,
 		newFunc:       newFunc,
 		scheme:        scheme,

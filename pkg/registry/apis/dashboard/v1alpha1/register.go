@@ -175,7 +175,6 @@ func (b *DashboardsAPIBuilder) UpdateAPIGroupInfo(apiGroupInfo *genericapiserver
 		storage[dash.StoragePath()],
 		largeObjects,
 		b.legacy.Access,
-		b.unified,
 		b.accessControl,
 		scheme,
 		func() runtime.Object { return &dashboardv1alpha1.DashboardWithAccessInfo{} },
