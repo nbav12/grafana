@@ -9,9 +9,10 @@ import (
 	commonV0 "github.com/grafana/grafana/pkg/apimachinery/apis/common/v0alpha1"
 	dashboard "github.com/grafana/grafana/pkg/apis/dashboard"
 	"github.com/grafana/grafana/pkg/storage/unified/apistore"
+	"github.com/grafana/grafana/pkg/storage/unified/resource"
 )
 
-func NewDashboardLargeObjectSupport(scheme *runtime.Scheme) *apistore.BasicLargeObjectSupport {
+func NewDashboardLargeObjectSupport(scheme *runtime.Scheme, client resource.BlobStoreClient) *apistore.BasicLargeObjectSupport {
 	return &apistore.BasicLargeObjectSupport{
 		TheGroupResource: dashboard.DashboardResourceInfo.GroupResource(),
 
@@ -20,6 +21,8 @@ func NewDashboardLargeObjectSupport(scheme *runtime.Scheme) *apistore.BasicLarge
 
 		// 10mb -- we should check what the largest ones are... might be bigger
 		MaxByteSize: 10 * 1024 * 1024,
+
+		Client: client,
 
 		ReduceSpec: func(obj runtime.Object) error {
 			dash, err := ToInternalDashboard(scheme, obj)
