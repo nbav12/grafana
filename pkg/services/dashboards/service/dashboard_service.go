@@ -35,6 +35,7 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/infra/metrics"
 	"github.com/grafana/grafana/pkg/infra/slugify"
+	dash "github.com/grafana/grafana/pkg/registry/apis/dashboard"
 	"github.com/grafana/grafana/pkg/services/accesscontrol"
 	"github.com/grafana/grafana/pkg/services/apiserver"
 	"github.com/grafana/grafana/pkg/services/apiserver/client"
@@ -97,9 +98,17 @@ func ProvideDashboardServiceImpl(
 	ac accesscontrol.AccessControl, folderSvc folder.Service, fStore folder.Store, r prometheus.Registerer,
 	restConfigProvider apiserver.RestConfigProvider, userService user.Service,
 	quotaService quota.Service, orgService org.Service, publicDashboardService publicdashboards.ServiceWrapper,
-	largeObjects apistore.LargeObjectSupport,
 ) (*DashboardServiceImpl, error) {
 	k8sHandler := client.NewK8sHandler(cfg, request.GetNamespaceMapper(cfg), dashboardv0alpha1.DashboardResourceInfo.GroupVersionResource(), restConfigProvider.GetRestConfig, dashboardStore, userService)
+	/*
+		#TODO
+		(1) validate this approach
+		(2) figure out how to reconcile with the large object support being registered under storageOpts by DashboardsAPIBuilder
+		(3) how do we pass in the scheme and the blob store client?
+		(4) why does the blob store client have grpc.ClientConnInterface as a field even though storage type is required to be "unified" for large objects?
+		(5) address import cycle
+	*/
+	largeObjects := dash.NewDashboardLargeObjectSupport(nil, nil)
 
 	dashSvc := &DashboardServiceImpl{
 		cfg:                       cfg,
