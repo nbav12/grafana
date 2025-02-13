@@ -168,7 +168,7 @@ func (s *Storage) handleLargeResources(ctx context.Context, obj utils.GrafanaMet
 			Name:      obj.GetName(),
 		}
 
-		err := support.Deconstruct(ctx, key, s.store, obj, buf.Bytes())
+		err := support.Deconstruct(ctx, key, obj, buf.Bytes())
 		if err != nil {
 			return nil, err
 		}

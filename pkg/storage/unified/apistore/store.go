@@ -512,7 +512,7 @@ func (s *Storage) GuaranteedUpdate(
 
 			// restore the full original object before tryUpdate
 			if s.opts.LargeObjectSupport != nil && mmm.GetBlob() != nil {
-				err = s.opts.LargeObjectSupport.Reconstruct(ctx, req.Key, s.store, mmm)
+				err = s.opts.LargeObjectSupport.Reconstruct(ctx, req.Key, mmm)
 				if err != nil {
 					return err
 				}

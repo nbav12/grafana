@@ -239,7 +239,7 @@ func (a *dashboardSqlAccess) migrateDashboards(ctx context.Context, orgId int64,
 			}
 
 			opts.Progress(i, fmt.Sprintf("[v:%d] %s Large object (%d)", dash.Generation, dash.Name, len(body)))
-			err = large.Deconstruct(ctx, req.Key, opts.BlobStore, obj, req.Value)
+			err = large.Deconstruct(ctx, req.Key, obj, req.Value)
 			if err != nil {
 				return blobs, err
 			}
