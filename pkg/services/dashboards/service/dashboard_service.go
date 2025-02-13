@@ -35,7 +35,6 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/infra/metrics"
 	"github.com/grafana/grafana/pkg/infra/slugify"
-	dash "github.com/grafana/grafana/pkg/registry/apis/dashboard"
 	"github.com/grafana/grafana/pkg/services/accesscontrol"
 	"github.com/grafana/grafana/pkg/services/apiserver"
 	"github.com/grafana/grafana/pkg/services/apiserver/client"
@@ -54,7 +53,6 @@ import (
 	"github.com/grafana/grafana/pkg/services/store/entity"
 	"github.com/grafana/grafana/pkg/services/user"
 	"github.com/grafana/grafana/pkg/setting"
-	"github.com/grafana/grafana/pkg/storage/unified/apistore"
 	"github.com/grafana/grafana/pkg/storage/unified/resource"
 	"github.com/grafana/grafana/pkg/storage/unified/search"
 	"github.com/grafana/grafana/pkg/util"
@@ -84,7 +82,6 @@ type DashboardServiceImpl struct {
 	k8sclient              client.K8sHandler
 	metrics                *dashboardsMetrics
 	publicDashboardService publicdashboards.ServiceWrapper
-	largeObjects           apistore.LargeObjectSupport
 
 	dashboardPermissionsReady chan struct{}
 }
@@ -100,15 +97,6 @@ func ProvideDashboardServiceImpl(
 	quotaService quota.Service, orgService org.Service, publicDashboardService publicdashboards.ServiceWrapper,
 ) (*DashboardServiceImpl, error) {
 	k8sHandler := client.NewK8sHandler(cfg, request.GetNamespaceMapper(cfg), dashboardv0alpha1.DashboardResourceInfo.GroupVersionResource(), restConfigProvider.GetRestConfig, dashboardStore, userService)
-	/*
-		#TODO
-		(1) validate this approach
-		(2) figure out how to reconcile with the large object support being registered under storageOpts by DashboardsAPIBuilder
-		(3) how do we pass in the scheme and the blob store client?
-		(4) why does the blob store client have grpc.ClientConnInterface as a field even though storage type is required to be "unified" for large objects?
-		(5) address import cycle
-	*/
-	largeObjects := dash.NewDashboardLargeObjectSupport(nil, nil)
 
 	dashSvc := &DashboardServiceImpl{
 		cfg:                       cfg,
@@ -124,7 +112,6 @@ func ProvideDashboardServiceImpl(
 		metrics:                   newDashboardsMetrics(r),
 		dashboardPermissionsReady: make(chan struct{}),
 		publicDashboardService:    publicDashboardService,
-		largeObjects:              largeObjects,
 	}
 
 	defaultLimits, err := readQuotaConfig(cfg)
@@ -1665,7 +1652,6 @@ func (dr *DashboardServiceImpl) listDashboardsThroughK8s(ctx context.Context, or
 
 	dashboards := make([]*dashboards.Dashboard, 0)
 	for _, item := range out.Items {
-		// #TODO check if providing the reconstructed large object should be avoided in list
 		dash, err := dr.UnstructuredToLegacyDashboard(ctx, &item, orgID)
 		if err != nil {
 			return nil, err
@@ -2016,21 +2002,6 @@ func (dr *DashboardServiceImpl) UnstructuredToLegacyDashboard(ctx context.Contex
 		// if slug isn't in the metadata, add it via the title
 		if out.Slug == "" {
 			out.UpdateSlug()
-		}
-	}
-
-	// Check for blob info
-	blobInfo := obj.GetBlob()
-	if blobInfo != nil && dr.largeObjects != nil {
-		gr := dr.largeObjects.GroupResource()
-		err = dr.largeObjects.Reconstruct(ctx, &resource.ResourceKey{
-			Group:     gr.Group,
-			Resource:  gr.Resource,
-			Namespace: obj.GetNamespace(),
-			Name:      obj.GetName(),
-		}, obj)
-		if err != nil {
-			return nil, err
 		}
 	}
 
