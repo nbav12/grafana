@@ -1656,6 +1656,7 @@ func (dr *DashboardServiceImpl) listDashboardsThroughK8s(ctx context.Context, or
 
 	dashboards := make([]*dashboards.Dashboard, 0)
 	for _, item := range out.Items {
+		// #TODO check if providing the reconstructed large object should be avoided in list
 		dash, err := dr.UnstructuredToLegacyDashboard(ctx, &item, orgID)
 		if err != nil {
 			return nil, err
@@ -2006,6 +2007,21 @@ func (dr *DashboardServiceImpl) UnstructuredToLegacyDashboard(ctx context.Contex
 		// if slug isn't in the metadata, add it via the title
 		if out.Slug == "" {
 			out.UpdateSlug()
+		}
+	}
+
+	// Check for blob info
+	blobInfo := obj.GetBlob()
+	if blobInfo != nil && dr.largeObjects != nil {
+		gr := dr.largeObjects.GroupResource()
+		err = dr.largeObjects.Reconstruct(ctx, &resource.ResourceKey{
+			Group:     gr.Group,
+			Resource:  gr.Resource,
+			Namespace: obj.GetNamespace(),
+			Name:      obj.GetName(),
+		}, obj)
+		if err != nil {
+			return nil, err
 		}
 	}
 
