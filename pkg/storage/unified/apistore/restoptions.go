@@ -31,15 +31,14 @@ type RESTOptionsGetter struct {
 	original storagebackend.Config
 
 	// Each group+resource may need custom options
-	Options map[string]StorageOptions
-	// #TODO find a better way to access this
+	options map[string]StorageOptions
 }
 
 func NewRESTOptionsGetterForClient(client resource.ResourceClient, original storagebackend.Config) *RESTOptionsGetter {
 	return &RESTOptionsGetter{
 		client:   client,
 		original: original,
-		Options:  make(map[string]StorageOptions),
+		options:  make(map[string]StorageOptions),
 	}
 }
 
@@ -98,7 +97,7 @@ func NewRESTOptionsGetterForFile(path string,
 }
 
 func (r *RESTOptionsGetter) RegisterOptions(gr schema.GroupResource, opts StorageOptions) {
-	r.Options[gr.String()] = opts
+	r.options[gr.String()] = opts
 }
 
 // TODO: The RESTOptionsGetter interface added a new example object parameter to help determine the default
@@ -135,7 +134,7 @@ func (r *RESTOptionsGetter) GetRESTOptions(resource schema.GroupResource, _ runt
 			indexers *cache.Indexers,
 		) (storage.Interface, factory.DestroyFunc, error) {
 			return NewStorage(config, r.client, keyFunc, nil, newFunc, newListFunc, getAttrsFunc,
-				trigger, indexers, r.Options[resource.String()])
+				trigger, indexers, r.options[resource.String()])
 		},
 		DeleteCollectionWorkers: 0,
 		EnableGarbageCollection: false,

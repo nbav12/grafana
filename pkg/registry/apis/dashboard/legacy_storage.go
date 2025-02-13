@@ -48,18 +48,14 @@ func (s *DashboardStorage) NewStore(scheme *runtime.Scheme, defaultOptsGetter ge
 		defaultOpts.StorageConfig.Config,
 	)
 
-	storageOpts := optsGetter.Options[resourceInfo.GroupResource().String()]
 	store, err := grafanaregistry.NewRegistryStore(scheme, resourceInfo, optsGetter)
 	return &storeWrapper{
 		Store: store,
-		// #TODO: make sure this is robust
-		largeObjects: storageOpts.LargeObjectSupport,
 	}, err
 }
 
 type storeWrapper struct {
 	*registry.Store
-	largeObjects apistore.LargeObjectSupport
 }
 
 // Create will create the dashboard using legacy storage and make sure the internal ID is set on the return object
@@ -90,32 +86,4 @@ func (s *storeWrapper) Update(ctx context.Context, name string, objInfo rest.Upd
 		}
 	}
 	return obj, created, err
-}
-
-// Get will fetch the dashboard using legacy storage and make sure that large objects are reconstructed.
-func (s *storeWrapper) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	ctx = legacy.WithLegacyAccess(ctx)
-	obj, err := s.Store.Get(ctx, name, options)
-
-	meta, err := utils.MetaAccessor(obj)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check for blob info
-	blobInfo := meta.GetBlob()
-	if blobInfo != nil && s.largeObjects != nil {
-		gr := s.largeObjects.GroupResource()
-		err = s.largeObjects.Reconstruct(ctx, &resource.ResourceKey{
-			Group:     gr.Group,
-			Resource:  gr.Resource,
-			Namespace: meta.GetNamespace(),
-			Name:      meta.GetName(),
-		}, meta)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return obj, err
 }
