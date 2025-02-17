@@ -57,19 +57,16 @@ func NewBackend(opts BackendOptions) (Backend, error) {
 	if opts.WatchBufferSize == 0 {
 		opts.WatchBufferSize = defaultWatchBufferSize
 	}
-	log := log.New("sql-resource-server")
-	b := &backend{
+	return &backend{
 		done:            ctx.Done(),
 		cancel:          cancel,
-		log:             log,
+		log:             log.New("sql-resource-server"),
 		tracer:          opts.Tracer,
 		dbProvider:      opts.DBProvider,
 		pollingInterval: pollingInterval,
 		watchBufferSize: opts.WatchBufferSize,
 		batchLock:       &batchLock{running: make(map[string]bool)},
-	}
-
-	return b, nil
+	}, nil
 }
 
 type backend struct {
