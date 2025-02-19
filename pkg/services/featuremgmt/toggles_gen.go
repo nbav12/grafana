@@ -966,4 +966,8 @@ const (
 	// FlagNewShareReportDrawer
 	// Enables the report creation drawer in a dashboard
 	FlagNewShareReportDrawer = "newShareReportDrawer"
+
+	// FlagAssetSriChecks
+	// Enables SRI checks for grafana javascript assets
+	FlagAssetSriChecks = "assetSriChecks"
 )
