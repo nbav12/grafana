@@ -71,6 +71,7 @@ func TestAlertInstanceProtoToModel(t *testing.T) {
 	lastEvalTime := currentStateSince.Add(-time.Minute).UTC()
 	lastSentAt := currentStateSince.Add(-2 * time.Minute).UTC()
 	resolvedAt := currentStateSince.Add(-3 * time.Minute).UTC()
+
 	ruleUID := "rule-uid-1"
 	orgID := int64(1)
 
