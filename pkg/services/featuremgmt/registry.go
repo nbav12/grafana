@@ -1807,7 +1807,7 @@ var (
 		},
 		{
 			Name:         "assetSriChecks",
-			Description:  "Enables SRI checks for grafana javascript assets",
+			Description:  "Enables SRI checks for Grafana Javascript assets",
 			Stage:        FeatureStageExperimental,
 			Owner:        grafanaPluginsPlatformSquad,
 			FrontendOnly: true,
